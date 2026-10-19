@@ -1,5 +1,8 @@
+
 name = "stolicainvest"
 compatibility_date = "2026-10-19"
 
 [assets]
 directory = "./dist"
+not_found_handling = "single-page-application"
+
