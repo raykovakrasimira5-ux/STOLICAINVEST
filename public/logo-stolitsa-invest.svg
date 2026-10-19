@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 140" fill="none">
+  <!-- STOLITSA INVEST REAL ESTATE EMBLEM -->
+  <g transform="translate(10, 10)">
+    <!-- Outer left step/pediment -->
+    <path
+      d="M10 110 V66 L22 54"
+      stroke="#2F54A3"
+      stroke-width="7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    
+    <!-- Outer roofline -->
+    <path
+      d="M28 50 L68 12 L106 48 V110"
+      stroke="#2F54A3"
+      stroke-width="7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Diagonal green accent bars on the right -->
+    <line
+      x1="82"
+      y1="18"
+      x2="108"
+      y2="44"
+      stroke="#67B82D"
+      stroke-width="7"
+      stroke-linecap="round"
+    />
+    <line
+      x1="76"
+      y1="34"
+      x2="118"
+      y2="76"
+      stroke="#67B82D"
+      stroke-width="7"
+      stroke-linecap="round"
+    />
+
+    <!-- Middle roofline -->
+    <path
+      d="M28 110 V68 L68 30 L96 58 V110"
+      stroke="#2F54A3"
+      stroke-width="7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Middle interior diagonal beam -->
+    <path
+      d="M60 52 L94 86"
+      stroke="#2F54A3"
+      stroke-width="7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+
+    <!-- Inner portal / doorway -->
+    <path
+      d="M48 110 V82 L68 64 L88 82 V110"
+      stroke="#2F54A3"
+      stroke-width="7"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+
+  <!-- BRAND NAME TYPOGRAPHY -->
+  <text
+    x="150"
+    y="72"
+    font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+    font-size="44"
+    font-weight="900"
+    letter-spacing="1.5"
+    fill="#2F54A3"
+  >СТОЛИЦА ИНВЕСТ</text>
+
+  <!-- SUBTITLE TYPOGRAPHY -->
+  <text
+    x="152"
+    y="108"
+    font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif"
+    font-size="18"
+    font-weight="800"
+    letter-spacing="7"
+    fill="#67B82D"
+  >НЕДВИЖИМИ ИМОТИ</text>
+</svg>

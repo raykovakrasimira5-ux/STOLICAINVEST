@@ -1,0 +1,7 @@
+{
+  "name": "Столица Инвест - Недвижими Имоти",
+  "description": "Официален каталог и листинг на агенция за недвижими имоти Столица Инвест. Проверени оферти за продажба и наем.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
