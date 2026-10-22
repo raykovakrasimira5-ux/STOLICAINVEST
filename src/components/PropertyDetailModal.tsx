@@ -18,6 +18,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Property } from '../types';
+import { AnimatedBrokerAvatar } from './AnimatedBrokerAvatar';
 
 interface PropertyDetailModalProps {
   property: Property | null;
@@ -75,7 +76,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in"
+      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-fade-in"
       onClick={onClose}
     >
       <div
@@ -147,17 +148,17 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
         {/* Modal Scrollable Body */}
         <div className="overflow-y-auto flex-1 p-5 sm:p-7 space-y-6">
-          {/* Header Title & Price */}
+          {/* Header Title & Price (Location with NO exact street address) */}
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
             <div>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
                 {property.title}
               </h2>
+              {/* Removed exact street address as requested */}
               <div className="flex items-center gap-1.5 text-slate-600 text-sm mt-1.5">
                 <MapPin className="w-4 h-4 text-[#2F54A3] shrink-0" />
-                <span className="font-medium">
-                  {property.city}, {property.neighborhood}
-                  {property.address ? ` — ${property.address}` : ''}
+                <span className="font-semibold text-slate-700">
+                  гр. {property.city}, кв. {property.neighborhood}
                 </span>
               </div>
             </div>
@@ -315,12 +316,12 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
             </div>
           </div>
 
-          {/* Location / Map Preview Helper */}
+          {/* Location / Area Preview (General Neighborhood only - NO exact street address) */}
           <div className="p-4 rounded-2xl bg-[#152850] text-white flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
-              <h4 className="font-bold text-base text-white">Местоположение на имота</h4>
+              <h4 className="font-bold text-base text-white">Район на имота</h4>
               <p className="text-xs text-blue-200 mt-0.5">
-                {property.city}, {property.neighborhood} {property.address && `• ${property.address}`}
+                гр. {property.city}, кв. {property.neighborhood}
               </p>
             </div>
             <a
@@ -331,30 +332,33 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#67B82D] hover:bg-[#589E26] text-white font-bold text-xs transition-colors shrink-0 shadow-sm"
             >
-              <span>Отвори в Google Maps</span>
+              <span>Преглед на района в Google Maps</span>
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
 
-          {/* Responsible Broker & Booking Form */}
+          {/* Responsible Broker with Animated Avatar & Booking Form */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-slate-50 p-5 rounded-2xl border border-slate-200">
-            {/* Broker Info */}
+            {/* Broker Info with Animated Avatar */}
             <div className="md:col-span-5 flex flex-col justify-between">
               <div>
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">
                   Отговорен брокер от Столица Инвест
                 </span>
                 <div className="flex items-center gap-3">
-                  <img
-                    src={property.agent.avatar}
-                    alt={property.agent.name}
-                    className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-md"
+                  <AnimatedBrokerAvatar
+                    name={property.agent.name}
+                    role={property.agent.agencyRole}
+                    size="xl"
                   />
                   <div>
                     <h4 className="text-base font-black text-slate-900 leading-snug">
                       {property.agent.name}
                     </h4>
-                    <p className="text-xs text-slate-600">{property.agent.agencyRole}</p>
+                    <p className="text-xs text-slate-600 font-medium">{property.agent.agencyRole}</p>
+                    <span className="inline-block mt-1 text-[10px] bg-emerald-50 text-[#4D8C21] font-bold px-2 py-0.5 rounded border border-emerald-200">
+                      Лицензиран консултант
+                    </span>
                   </div>
                 </div>
 
@@ -376,17 +380,24 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-slate-200">
+              <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
                 <a
                   href={`https://wa.me/${property.agent.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
                     `Здравейте Столица Инвест, интересувам се от имот Ref № ${property.refNumber}: ${property.title}`
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-2.5 px-4 rounded-xl bg-[#67B82D] hover:bg-[#589E26] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-xs"
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#25D366] hover:bg-[#20ba5a] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-xs"
                 >
                   <Send className="w-3.5 h-3.5" />
                   Бързо съобщение във WhatsApp
+                </a>
+
+                <a
+                  href={`viber://chat?number=%2B${property.agent.phone.replace(/[^0-9]/g, '')}`}
+                  className="w-full py-2 px-4 rounded-xl bg-[#7360F2] hover:bg-[#6450e0] text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-xs"
+                >
+                  Съобщение във Viber
                 </a>
               </div>
             </div>

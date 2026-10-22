@@ -16,31 +16,34 @@ export const AgencyLogo: React.FC<AgencyLogoProps> = ({
   showText = true,
 }) => {
   if (customLogoUrl) {
-    const heightClass = size === 'sm' ? 'h-8' : size === 'lg' ? 'h-14' : 'h-10';
+    const heightClass = size === 'sm' ? 'h-8' : size === 'lg' ? 'h-14' : 'h-10 sm:h-11';
     return (
-      <img
-        src={customLogoUrl}
-        alt="Столица Инвест - Недвижими Имоти"
-        className={`${heightClass} w-auto object-contain ${className}`}
-      />
+      <div className={`shrink-0 flex items-center ${className}`}>
+        <img
+          src={customLogoUrl}
+          alt="Столица Инвест - Недвижими Имоти"
+          className={`${heightClass} w-auto max-w-[260px] object-contain shrink-0`}
+        />
+      </div>
     );
   }
 
   const isLight = variant === 'light';
-  const iconHeight = size === 'sm' ? 32 : size === 'lg' ? 48 : 40;
-  const iconWidth = Math.round(iconHeight * 1.05);
+  const iconHeight = size === 'sm' ? 32 : size === 'lg' ? 48 : 42;
+  const iconWidth = Math.round(iconHeight * 1.08); // exact ratio matching 135/125
 
   const primaryBlue = isLight ? '#60A5FA' : '#2F54A3';
   const accentGreen = '#67B82D';
 
   return (
-    <div className={`flex items-center gap-3 select-none ${className}`}>
-      {/* Exact Architectural Outline Emblem matching "logo SI white.jpg" */}
+    <div className={`flex items-center gap-2.5 sm:gap-3 shrink-0 select-none ${className}`}>
+      {/* Exact Architectural Outline Emblem with fixed aspect ratio */}
       <svg
         viewBox="0 0 135 125"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        style={{ width: iconWidth, height: iconHeight }}
+        preserveAspectRatio="xMidYMid meet"
+        style={{ width: `${iconWidth}px`, height: `${iconHeight}px` }}
         className="shrink-0 transition-transform duration-300 group-hover:scale-105"
       >
         {/* Leftmost step */}
@@ -109,16 +112,16 @@ export const AgencyLogo: React.FC<AgencyLogoProps> = ({
         />
       </svg>
 
-      {/* Typography from user logo: СТОЛИЦА ИНВЕСТ / НЕДВИЖИМИ ИМОТИ */}
+      {/* Typography: СТОЛИЦА ИНВЕСТ / НЕДВИЖИМИ ИМОТИ */}
       {showText && (
-        <div className="flex flex-col">
+        <div className="flex flex-col shrink-0 whitespace-nowrap">
           <div
             className={`font-black tracking-tight leading-none ${
               size === 'sm'
-                ? 'text-lg sm:text-xl'
+                ? 'text-base sm:text-lg'
                 : size === 'lg'
                 ? 'text-2xl sm:text-3xl'
-                : 'text-xl sm:text-2xl'
+                : 'text-lg sm:text-xl md:text-2xl'
             } ${isLight ? 'text-white' : 'text-[#2F54A3]'}`}
             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >
@@ -127,8 +130,8 @@ export const AgencyLogo: React.FC<AgencyLogoProps> = ({
           </div>
 
           <div
-            className={`font-black uppercase tracking-[0.22em] mt-0.5 leading-none ${
-              size === 'sm' ? 'text-[9px]' : size === 'lg' ? 'text-xs' : 'text-[10px] sm:text-[11px]'
+            className={`font-black uppercase tracking-[0.22em] mt-0.5 sm:mt-1 leading-none ${
+              size === 'sm' ? 'text-[8px]' : size === 'lg' ? 'text-xs' : 'text-[9px] sm:text-[10px] md:text-[11px]'
             } text-[#67B82D]`}
             style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
           >

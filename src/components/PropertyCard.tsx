@@ -1,6 +1,7 @@
 import React from 'react';
 import { Heart, MapPin, Bed, Bath, Maximize, Layers, Phone, ArrowUpRight } from 'lucide-react';
 import { Property } from '../types';
+import { AnimatedBrokerAvatar } from './AnimatedBrokerAvatar';
 
 interface PropertyCardProps {
   property: Property;
@@ -31,8 +32,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         isList ? 'md:flex-row' : ''
       }`}
     >
-      {/* Image Container */}
-      <div className={`relative overflow-hidden ${isList ? 'md:w-72 lg:w-84 shrink-0' : 'w-full h-56 sm:h-64'}`}>
+      {/* Image Container - Clickable to open property details */}
+      <div
+        onClick={() => onSelectProperty(property)}
+        className={`relative overflow-hidden cursor-pointer select-none ${
+          isList ? 'md:w-72 lg:w-84 shrink-0' : 'w-full h-56 sm:h-64'
+        }`}
+        title="Кликнете за преглед на офертата"
+      >
         <img
           src={property.images[0]}
           alt={property.title}
@@ -65,7 +72,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             )}
           </div>
 
-          {/* Favorite button */}
+          {/* Favorite button (stop propagation so it doesn't open the modal) */}
           <button
             type="button"
             onClick={(e) => {
@@ -98,10 +105,14 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
       {/* Content Container */}
       <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between">
         <div>
-          {/* Price Header */}
-          <div className="flex items-baseline justify-between gap-2 mb-1.5">
+          {/* Price Header - Clickable to open property details */}
+          <div
+            onClick={() => onSelectProperty(property)}
+            className="flex items-baseline justify-between gap-2 mb-1.5 cursor-pointer group/price select-none"
+            title="Кликнете за преглед на офертата"
+          >
             <div>
-              <span className="text-xl sm:text-2xl font-black text-[#2F54A3] tracking-tight">
+              <span className="text-xl sm:text-2xl font-black text-[#2F54A3] group-hover/price:text-[#1e3c7b] transition-colors tracking-tight">
                 {priceFormatted} €
               </span>
               {isSale ? (
@@ -119,7 +130,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             </span>
           </div>
 
-          {/* Title */}
+          {/* Title - Clickable to open property details */}
           <h3
             onClick={() => onSelectProperty(property)}
             className="text-base font-bold text-slate-900 hover:text-[#2F54A3] transition-colors cursor-pointer line-clamp-1 mb-1.5"
@@ -128,11 +139,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
             {property.title}
           </h3>
 
-          {/* Location */}
+          {/* Location - Only City and Neighborhood (NO exact street address) */}
           <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-4">
             <MapPin className="w-3.5 h-3.5 text-[#2F54A3] shrink-0" />
-            <span className="truncate font-medium">
-              {property.city}, {property.neighborhood}
+            <span className="truncate font-semibold">
+              гр. {property.city}, кв. {property.neighborhood}
             </span>
           </div>
 
@@ -180,17 +191,17 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           </div>
         </div>
 
-        {/* Footer with Broker & View Details Action */}
+        {/* Footer with Animated Broker Avatar & View Details Action */}
         <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-3">
-          {/* Broker avatar and contact */}
-          <div className="flex items-center gap-2 min-w-0">
-            <img
-              src={property.agent.avatar}
-              alt={property.agent.name}
-              className="w-7 h-7 rounded-full object-cover border border-slate-200 shrink-0"
+          {/* Animated broker avatar and contact */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <AnimatedBrokerAvatar
+              name={property.agent.name}
+              role={property.agent.agencyRole}
+              size="sm"
             />
             <div className="truncate text-left">
-              <p className="text-[11px] font-semibold text-slate-800 truncate leading-tight">
+              <p className="text-[11px] font-bold text-slate-800 truncate leading-tight">
                 {property.agent.name}
               </p>
               <a

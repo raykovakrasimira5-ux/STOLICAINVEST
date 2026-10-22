@@ -10,6 +10,7 @@ import {
   Phone,
   Layers,
   Heart,
+  Mail,
 } from 'lucide-react';
 import { Property, PropertyFilterState, UserProfile } from './types';
 import { INITIAL_PROPERTIES } from './data/properties';
@@ -20,12 +21,15 @@ import { PropertyDetailModal } from './components/PropertyDetailModal';
 import { AuthModal } from './components/AuthModal';
 import { LogoCustomizerModal } from './components/LogoCustomizerModal';
 import { FavoritesDrawer } from './components/FavoritesDrawer';
+import { OfficesSection } from './components/OfficesSection';
+import { ContactSection } from './components/ContactSection';
+import { SellPropertyModal } from './components/SellPropertyModal';
 import { Footer } from './components/Footer';
 
-const LOCAL_STORAGE_PROPERTIES_KEY = 'stolicainvest_properties_v6';
-const LOCAL_STORAGE_FAVORITES_KEY = 'stolicainvest_favorites_v6';
-const LOCAL_STORAGE_USER_KEY = 'stolicainvest_user_v6';
-const LOCAL_STORAGE_LOGO_KEY = 'stolicainvest_logo_v6';
+const LOCAL_STORAGE_PROPERTIES_KEY = 'stolicainvest_properties_v7';
+const LOCAL_STORAGE_FAVORITES_KEY = 'stolicainvest_favorites_v7';
+const LOCAL_STORAGE_USER_KEY = 'stolicainvest_user_v7';
+const LOCAL_STORAGE_LOGO_KEY = 'stolicainvest_logo_v7';
 
 const INITIAL_FILTERS: PropertyFilterState = {
   searchQuery: '',
@@ -79,7 +83,7 @@ export default function App() {
     } catch {
       // Ignore
     }
-    return ['prop-ruse-1'];
+    return ['prop-caro-1'];
   });
 
   // Custom Logo URL state
@@ -101,6 +105,7 @@ export default function App() {
   const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
   const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [isFavoritesDrawerOpen, setIsFavoritesDrawerOpen] = useState(false);
+  const [isSellModalOpen, setIsSellModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Sync to local storage
@@ -180,6 +185,15 @@ export default function App() {
   const handleResetFilters = () => {
     setFilters(INITIAL_FILTERS);
   };
+
+  // Counts for ПРОДАЖБИ and НАЕМИ
+  const salePropertiesCount = useMemo(() => {
+    return properties.filter((p) => p.dealType === 'sale').length;
+  }, [properties]);
+
+  const rentPropertiesCount = useMemo(() => {
+    return properties.filter((p) => p.dealType === 'rent').length;
+  }, [properties]);
 
   // Filter and sort listings
   const filteredProperties = useMemo(() => {
@@ -280,15 +294,6 @@ export default function App() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'bg'));
   }, [properties]);
 
-  // Active property types in current listings
-  const activePropertyTypes = useMemo(() => {
-    const map = new Map<string, number>();
-    properties.forEach((p) => {
-      map.set(p.category, (map.get(p.category) || 0) + 1);
-    });
-    return Array.from(map.entries());
-  }, [properties]);
-
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 text-slate-900 selection:bg-blue-100 selection:text-[#2F54A3]">
       {/* Top Navigation */}
@@ -303,124 +308,42 @@ export default function App() {
         customLogoUrl={customLogoUrl}
         onResetFilters={handleResetFilters}
         user={user}
+        saleCount={salePropertiesCount}
+        rentCount={rentPropertiesCount}
+        activeDealType={filters.dealType}
+        onSelectDealType={(dealType) => {
+          handleUpdateFilters({ dealType });
+          document.getElementById('search-box')?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        onOpenSellModal={() => setIsSellModalOpen(true)}
       />
 
-      {/* Hero with Dynamic Modern Design & Requested Filters Order */}
+      {/* Hero with Dynamic Modern Design, Real Estate Photo Background, Top Listings Carousel & Filters */}
       <HeroSearch
         filters={filters}
         onFilterChange={handleUpdateFilters}
         onResetFilters={handleResetFilters}
         totalResults={filteredProperties.length}
         availableNeighborhoods={availableNeighborhoods}
+        topProperties={properties.slice(0, 5)}
+        onSelectProperty={(prop) => setSelectedProperty(prop)}
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Neighborhood Chips Bar - Alphabetical Order (А-Я) */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 shrink-0 pr-1">
-            <span>Квартали в Русе (А-Я):</span>
-          </div>
-          <button
-            onClick={() => handleUpdateFilters({ neighborhood: 'all' })}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-              filters.neighborhood === 'all'
-                ? 'bg-[#2F54A3] text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-            }`}
-          >
-            <span>Всички квартали</span>
-            <span
-              className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                filters.neighborhood === 'all'
-                  ? 'bg-[#67B82D] text-white'
-                  : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              {properties.length}
-            </span>
-          </button>
-          {availableNeighborhoods.map((n) => {
-            const count = properties.filter((p) => p.neighborhood === n).length;
-            const isSelected = filters.neighborhood === n;
-            return (
-              <button
-                key={n}
-                onClick={() =>
-                  handleUpdateFilters({ neighborhood: isSelected ? 'all' : n })
-                }
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-[#2F54A3] text-white shadow-xs ring-2 ring-blue-300'
-                    : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-                }`}
-              >
-                <span>кв. {n}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                    isSelected ? 'bg-[#67B82D] text-white' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Quick Property Types Filter Bar */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <button
-            onClick={() => handleUpdateFilters({ category: 'all' })}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-              filters.category === 'all'
-                ? 'bg-[#2F54A3] text-white shadow-xs'
-                : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-            }`}
-          >
-            <span>Всички видове имоти</span>
-            <span
-              className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                filters.category === 'all' ? 'bg-[#67B82D] text-white' : 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              {properties.length}
-            </span>
-          </button>
-
-          {activePropertyTypes.map(([category, count]) => {
-            const isSelected = filters.category === category;
-            return (
-              <button
-                key={category}
-                onClick={() =>
-                  handleUpdateFilters({ category: isSelected ? 'all' : category })
-                }
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-[#2F54A3] text-white shadow-xs'
-                    : 'bg-white text-slate-700 hover:bg-slate-200/80 border border-slate-200'
-                }`}
-              >
-                <span>{category}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                    isSelected ? 'bg-[#67B82D] text-white' : 'bg-slate-100 text-slate-600'
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
+      <main id="properties-section" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Toolbar: Results Count, Sort, Grid/List view toggle */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-bold text-slate-800">
               Показване на <span className="text-[#2F54A3] font-black">{filteredProperties.length}</span> оферти в гр. Русе
             </span>
+            {filters.dealType !== 'all' && (
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-md ${
+                filters.dealType === 'sale' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-blue-50 text-[#2F54A3] border border-blue-200'
+              }`}>
+                {filters.dealType === 'sale' ? 'Продажби' : 'Под наем'}
+              </span>
+            )}
             {filters.neighborhood !== 'all' && (
               <span className="text-xs bg-blue-50 text-[#2F54A3] font-semibold px-2 py-0.5 rounded-md border border-blue-200">
                 кв. {filters.neighborhood}
@@ -523,44 +446,11 @@ export default function App() {
           </div>
         )}
 
-        {/* Requested Contact Banner:
-            Header: "СВЪРЖЕТЕ СЕ С НАС"
-            Two action buttons for: 0876081309 and 0877633111
-        */}
-        <div className="mt-12 bg-gradient-to-r from-[#0d1c3a] via-[#1a3468] to-[#2F54A3] rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 border border-blue-900/60 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#67B82D]/15 rounded-full blur-3xl pointer-events-none" />
+        {/* Side-by-Side Offices Section: Офис в Русе & Офис в София */}
+        <OfficesSection />
 
-          <div className="space-y-1.5 text-center md:text-left relative z-10">
-            <span className="inline-flex items-center gap-1.5 text-lime-300 text-xs font-bold uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-[#67B82D]" />
-              Столица Инвест • Офис гр. Русе, ул. Кирил Старцев 3
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
-              СВЪРЖЕТЕ СЕ С НАС
-            </h3>
-            <p className="text-xs sm:text-sm text-blue-100 max-w-xl">
-              Директна телефонна връзка с нашите консултанти за огледи, консултации и продажба на имот в Русе.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
-            <a
-              href="tel:0876081309"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-[#67B82D] hover:bg-[#589E26] text-white font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2.5 cursor-pointer hover:scale-105"
-            >
-              <Phone className="w-4 h-4" />
-              <span>0876 081 309</span>
-            </a>
-
-            <a
-              href="tel:0877633111"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white hover:bg-slate-100 text-[#152a55] font-black text-sm transition-all shadow-lg flex items-center justify-center gap-2.5 cursor-pointer hover:scale-105"
-            >
-              <Phone className="w-4 h-4 text-[#2F54A3]" />
-              <span>0877 633 111</span>
-            </a>
-          </div>
-        </div>
+        {/* Bottom Contact Section: "Свържете се с нас веднага" */}
+        <ContactSection />
       </main>
 
       {/* Footer */}
@@ -582,6 +472,12 @@ export default function App() {
           onToggleFavorite={handleToggleFavorite}
         />
       )}
+
+      {/* Sell / Rent Property Modal */}
+      <SellPropertyModal
+        isOpen={isSellModalOpen}
+        onClose={() => setIsSellModalOpen(false)}
+      />
 
       {/* Authentication / Profile Modal (Replaces "Добави обява") */}
       <AuthModal
