@@ -5,8 +5,14 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/properties?sync=true",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

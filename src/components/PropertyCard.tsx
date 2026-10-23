@@ -41,8 +41,11 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         title="Кликнете за преглед на офертата"
       >
         <img
-          src={property.images[0]}
+          src={property.images?.[0] || '/assets/aistudio/hoise_8579d183.png'}
           alt={property.title}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/assets/aistudio/hoise_8579d183.png';
+          }}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
@@ -53,13 +56,28 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
         {/* Top Badges */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span
-              className={`px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider shadow-xs ${
-                isSale ? 'bg-[#67B82D] text-white' : 'bg-[#2F54A3] text-white'
-              }`}
-            >
-              {isSale ? 'Продажба' : 'Под наем'}
-            </span>
+            {property.status === 3 ? (
+              <span className="px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider shadow-xs bg-slate-700 text-white">
+                Продаден
+              </span>
+            ) : property.status === 2 ? (
+              <span className="px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider shadow-xs bg-amber-600 text-white">
+                Резервиран
+              </span>
+            ) : (
+              <span
+                className={`px-2.5 py-1 rounded-md text-xs font-black uppercase tracking-wider shadow-xs ${
+                  isSale ? 'bg-[#67B82D] text-white' : 'bg-[#2F54A3] text-white'
+                }`}
+              >
+                {isSale ? 'Продажба' : 'Под наем'}
+              </span>
+            )}
+            {property.exclusive && (
+              <span className="px-2 py-1 rounded-md text-[11px] font-black bg-[#67B82D] text-white uppercase tracking-wide shadow-xs border border-lime-300/40">
+                Ексклузивна
+              </span>
+            )}
             {property.featured && (
               <span className="px-2 py-1 rounded-md text-[11px] font-black bg-[#2F54A3] text-white uppercase tracking-wide shadow-xs border border-blue-400/40">
                 Топ оферта
@@ -113,7 +131,9 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
           >
             <div>
               <span className="text-xl sm:text-2xl font-black text-[#2F54A3] group-hover/price:text-[#1e3c7b] transition-colors tracking-tight">
-                {priceFormatted} €
+                {property.originalCurrency === 'BGN' && property.originalPrice
+                  ? `${property.originalPrice.toLocaleString('bg-BG')} лв.`
+                  : `${priceFormatted} €`}
               </span>
               {isSale ? (
                 <span className="text-xs text-slate-500 ml-2 font-medium">
@@ -125,8 +145,10 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({
                 </span>
               )}
             </div>
-            <span className="text-xs text-slate-500 font-medium hidden sm:inline" title="Ориентировъчна цена в лева">
-              ~ {priceBgn} лв.
+            <span className="text-xs text-slate-500 font-medium hidden sm:inline" title="Ориентировъчна цена">
+              {property.originalCurrency === 'BGN'
+                ? `~ ${priceFormatted} €`
+                : `~ ${priceBgn} лв.`}
             </span>
           </div>
 

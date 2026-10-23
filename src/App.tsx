@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Property, PropertyFilterState, UserProfile } from './types';
 import { INITIAL_PROPERTIES } from './data/properties';
+import { fetchPropertiesFromApi } from './services/estatePlusService';
 import { Navbar } from './components/Navbar';
 import { HeroSearch } from './components/HeroSearch';
 import { PropertyCard } from './components/PropertyCard';
@@ -26,10 +27,10 @@ import { ContactSection } from './components/ContactSection';
 import { SellPropertyModal } from './components/SellPropertyModal';
 import { Footer } from './components/Footer';
 
-const LOCAL_STORAGE_PROPERTIES_KEY = 'stolicainvest_properties_v7';
-const LOCAL_STORAGE_FAVORITES_KEY = 'stolicainvest_favorites_v7';
-const LOCAL_STORAGE_USER_KEY = 'stolicainvest_user_v7';
-const LOCAL_STORAGE_LOGO_KEY = 'stolicainvest_logo_v7';
+const LOCAL_STORAGE_PROPERTIES_KEY = 'stolicainvest_properties_v8';
+const LOCAL_STORAGE_FAVORITES_KEY = 'stolicainvest_favorites_v8';
+const LOCAL_STORAGE_USER_KEY = 'stolicainvest_user_v8';
+const LOCAL_STORAGE_LOGO_KEY = 'stolicainvest_logo_v8';
 
 const INITIAL_FILTERS: PropertyFilterState = {
   searchQuery: '',
@@ -52,13 +53,23 @@ export default function App() {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_PROPERTIES_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
       }
     } catch {
       // Ignore parse error
     }
     return INITIAL_PROPERTIES;
   });
+
+  // Synchronization status states
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState<number | null>(null);
+  const [feedUpdatedTime, setFeedUpdatedTime] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [displayCount, setDisplayCount] = useState(24);
 
   // User Authentication state
   const [user, setUser] = useState<UserProfile | null>(() => {
@@ -124,6 +135,57 @@ export default function App() {
       // Ignore
     }
   }, [favoriteIds]);
+
+  // Automatic Estate Plus synchronization on mount with graceful fallback
+  useEffect(() => {
+    let isMounted = true;
+    setIsSyncing(true);
+    fetchPropertiesFromApi(false)
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.properties && res.properties.length > 0) {
+          setProperties(res.properties);
+          setLastSyncTime(res.lastSyncTime);
+          setFeedUpdatedTime(res.feedUpdatedTime);
+          if (res.error) setSyncError(res.error);
+        }
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        console.error('Initial Estate Plus sync error:', err);
+        setSyncError(err?.message || 'Грешка при зареждане');
+      })
+      .finally(() => {
+        if (isMounted) setIsSyncing(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Reset pagination display count when any filter changes
+  useEffect(() => {
+    setDisplayCount(24);
+  }, [filters]);
+
+  // Manual refresh from Estate Plus feed triggered by user/broker
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    setSyncError(null);
+    try {
+      const res = await fetchPropertiesFromApi(true);
+      if (res.properties && res.properties.length > 0) {
+        setProperties(res.properties);
+        setLastSyncTime(res.lastSyncTime);
+        setFeedUpdatedTime(res.feedUpdatedTime);
+      }
+    } catch (err: any) {
+      setSyncError(err?.message || 'Неуспешно обновяване от Estate Plus');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleSaveLogo = (url: string) => {
     setCustomLogoUrl(url);
@@ -294,6 +356,35 @@ export default function App() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, 'bg'));
   }, [properties]);
 
+  // Unique cities sorted with Русе and София first
+  const availableCities = useMemo(() => {
+    const set = new Set<string>();
+    properties.forEach((p) => {
+      if (p.city) set.add(p.city);
+    });
+    return Array.from(set).sort((a, b) => {
+      if (a === 'Русе') return -1;
+      if (b === 'Русе') return 1;
+      if (a === 'София') return -1;
+      if (b === 'София') return 1;
+      return a.localeCompare(b, 'bg');
+    });
+  }, [properties]);
+
+  // Top 5 properties for carousel (prioritizing featured/top offers from Estate Plus)
+  const topProperties = useMemo(() => {
+    const featured = properties.filter((p) => p.featured);
+    if (featured.length >= 5) {
+      return featured.slice(0, 5);
+    }
+    return [...featured, ...properties.filter((p) => !p.featured)].slice(0, 5);
+  }, [properties]);
+
+  // Paginated visible properties for maximum UI responsiveness
+  const visibleProperties = useMemo(() => {
+    return filteredProperties.slice(0, displayCount);
+  }, [filteredProperties, displayCount]);
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 text-slate-900 selection:bg-blue-100 selection:text-[#2F54A3]">
       {/* Top Navigation */}
@@ -325,17 +416,19 @@ export default function App() {
         onResetFilters={handleResetFilters}
         totalResults={filteredProperties.length}
         availableNeighborhoods={availableNeighborhoods}
-        topProperties={properties.slice(0, 5)}
+        availableCities={availableCities}
+        topProperties={topProperties}
         onSelectProperty={(prop) => setSelectedProperty(prop)}
       />
 
       {/* Main Content Area */}
       <main id="properties-section" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Toolbar: Results Count, Sort, Grid/List view toggle */}
+        {/* Toolbar: Results Count, Sort, Sync status & Grid/List view toggle */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-sm font-bold text-slate-800">
-              Показване на <span className="text-[#2F54A3] font-black">{filteredProperties.length}</span> оферти в гр. Русе
+              Показване на <span className="text-[#2F54A3] font-black">{filteredProperties.length}</span> оферти
+              {filters.city !== 'all' ? ` в гр. ${filters.city}` : ''}
             </span>
             {filters.dealType !== 'all' && (
               <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-md ${
@@ -356,7 +449,27 @@ export default function App() {
             )}
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
+            {/* Estate Plus Live Sync Badge & Force Refresh button */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isSyncing ? 'bg-blue-500 animate-ping' : syncError ? 'bg-amber-500' : 'bg-[#67B82D]'
+                }`}
+              />
+              <span className="hidden md:inline">Estate Plus:</span>
+              <span>{isSyncing ? 'Синхронизиране...' : `${properties.length} оферти`}</span>
+              <button
+                type="button"
+                onClick={handleManualSync}
+                disabled={isSyncing}
+                title="Обнови офертите от Estate Plus сега"
+                className="ml-1 p-1 hover:text-[#2F54A3] hover:bg-slate-200 rounded-md transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <RotateCcw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+
             {/* Sorting Dropdown */}
             <div className="flex items-center gap-1.5 text-xs text-slate-600">
               <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
@@ -422,28 +535,43 @@ export default function App() {
               className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2F54A3] hover:bg-[#25468B] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              Покажи всички оферти в Русе
+              Покажи всички оферти
             </button>
           </div>
         ) : (
-          <div
-            className={
-              viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                : 'space-y-4'
-            }
-          >
-            {filteredProperties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                isFavorite={favoriteIds.includes(property.id)}
-                onToggleFavorite={handleToggleFavorite}
-                onSelectProperty={(prop) => setSelectedProperty(prop)}
-                layout={viewMode}
-              />
-            ))}
-          </div>
+          <>
+            <div
+              className={
+                viewMode === 'grid'
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                  : 'space-y-4'
+              }
+            >
+              {visibleProperties.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  isFavorite={favoriteIds.includes(property.id)}
+                  onToggleFavorite={handleToggleFavorite}
+                  onSelectProperty={(prop) => setSelectedProperty(prop)}
+                  layout={viewMode}
+                />
+              ))}
+            </div>
+
+            {/* Load more pagination button */}
+            {visibleProperties.length < filteredProperties.length && (
+              <div className="text-center pt-6 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setDisplayCount((prev) => prev + 24)}
+                  className="px-8 py-3.5 rounded-2xl bg-[#2F54A3] hover:bg-[#203c77] text-white font-extrabold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer inline-flex items-center gap-2"
+                >
+                  <span>Зареди още оферти ({filteredProperties.length - visibleProperties.length} оставащи)</span>
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Side-by-Side Offices Section: Офис в Русе & Офис в София */}

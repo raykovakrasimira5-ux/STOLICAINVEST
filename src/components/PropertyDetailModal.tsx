@@ -164,11 +164,26 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
             </div>
 
             <div className="text-left md:text-right shrink-0 bg-blue-50/80 p-3.5 rounded-2xl border border-blue-200/60">
+              {property.oldPrice && property.oldPrice > property.price && (
+                <div className="text-xs font-bold text-red-500 line-through mb-0.5">
+                  Предишна цена: {property.oldPrice.toLocaleString('bg-BG')} €
+                </div>
+              )}
               <div className="text-2xl sm:text-3xl font-black text-[#2F54A3]">
-                {priceFormatted} €
+                {property.originalCurrency === 'BGN' && property.originalPrice
+                  ? `${property.originalPrice.toLocaleString('bg-BG')} лв.`
+                  : `${priceFormatted} €`}
               </div>
               <div className="text-xs font-semibold text-slate-600 mt-0.5">
-                {isSale ? `${pricePerSqm} €/м² • ~ ${priceBgn} лв.` : `Наем на месец • ~ ${priceBgn} лв.`}
+                {property.originalCurrency === 'BGN'
+                  ? `~ ${property.price.toLocaleString('bg-BG')} € ${
+                      isSale
+                        ? `(${Math.round(property.price / (property.area || 1)).toLocaleString('bg-BG')} €/м²)`
+                        : 'на месец'
+                    }`
+                  : isSale
+                  ? `${pricePerSqm} €/м² • ~ ${priceBgn} лв.`
+                  : `Наем на месец • ~ ${priceBgn} лв.`}
               </div>
             </div>
           </div>
@@ -267,23 +282,113 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200">
                 <span className="text-slate-500">Строителство:</span>
-                <span className="font-semibold text-slate-900">{property.constructionType || 'Тухла'}</span>
+                <span className="font-semibold text-slate-900">{property.constructionType || 'Тухла / Монолит'}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-200">
-                <span className="text-slate-500">Година на строеж:</span>
-                <span className="font-semibold text-slate-900">{property.yearBuilt || '2022 г.'}</span>
-              </div>
+              {property.yearBuilt && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Година на строеж:</span>
+                  <span className="font-semibold text-slate-900">{property.yearBuilt} г.</span>
+                </div>
+              )}
               <div className="flex justify-between py-1 border-b border-slate-200">
                 <span className="text-slate-500">Град / Локация:</span>
                 <span className="font-semibold text-slate-900">{property.city}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200">
-                <span className="text-slate-500">Квартал:</span>
+                <span className="text-slate-500">Квартал / Район:</span>
                 <span className="font-semibold text-slate-900">{property.neighborhood}</span>
               </div>
               <div className="flex justify-between py-1 border-b border-slate-200">
                 <span className="text-slate-500">Статус:</span>
-                <span className="font-semibold text-[#4D8C21]">Свободен за огледи</span>
+                <span
+                  className={`font-bold ${
+                    property.status === 3
+                      ? 'text-slate-600'
+                      : property.status === 2
+                      ? 'text-amber-600'
+                      : 'text-[#4D8C21]'
+                  }`}
+                >
+                  {property.statusLabel || (property.status === 3 ? 'Продаден' : property.status === 2 ? 'Резервиран' : 'Свободен за огледи')}
+                </span>
+              </div>
+
+              {/* Technical fields from Estate Plus SpecialData */}
+              {property.builtArea && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Застроена площ:</span>
+                  <span className="font-semibold text-slate-900">{property.builtArea} м²</span>
+                </div>
+              )}
+              {property.landArea && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Площ на парцела:</span>
+                  <span className="font-semibold text-slate-900">{property.landArea} м²</span>
+                </div>
+              )}
+              {property.openedArea && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Открита площ:</span>
+                  <span className="font-semibold text-slate-900">{property.openedArea} м²</span>
+                </div>
+              )}
+              {property.rooms && property.rooms > 0 && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Брой помещения:</span>
+                  <span className="font-semibold text-slate-900">{property.rooms}</span>
+                </div>
+              )}
+              {property.heatingText && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Отопление:</span>
+                  <span className="font-semibold text-slate-900">{property.heatingText}</span>
+                </div>
+              )}
+              {property.position && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Изложение:</span>
+                  <span className="font-semibold text-slate-900">{property.position}</span>
+                </div>
+              )}
+              {property.stage && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Етап на сградата:</span>
+                  <span className="font-semibold text-slate-900">{property.stage}</span>
+                </div>
+              )}
+              {property.statute && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Статут на земята:</span>
+                  <span className="font-semibold text-slate-900">{property.statute}</span>
+                </div>
+              )}
+              {property.kint && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">КИНТ:</span>
+                  <span className="font-semibold text-slate-900">{property.kint}</span>
+                </div>
+              )}
+              {property.height && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Макс. кота корниз:</span>
+                  <span className="font-semibold text-slate-900">{property.height} м.</span>
+                </div>
+              )}
+              {property.minPlanting && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Мин. озеленяване:</span>
+                  <span className="font-semibold text-slate-900">{property.minPlanting}%</span>
+                </div>
+              )}
+              {property.completeLevel && (
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Степен на завършеност:</span>
+                  <span className="font-semibold text-slate-900">{property.completeLevel}</span>
+                </div>
+              )}
+              <div className="flex justify-between py-1 border-b border-slate-200">
+                <span className="text-slate-500">Реф. код:</span>
+                <span className="font-mono font-bold text-[#2F54A3]">{property.refNumber}</span>
               </div>
             </div>
           </div>

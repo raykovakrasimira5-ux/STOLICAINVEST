@@ -9,6 +9,7 @@ interface HeroSearchProps {
   onResetFilters: () => void;
   totalResults: number;
   availableNeighborhoods?: string[];
+  availableCities?: string[];
   topProperties: Property[];
   onSelectProperty: (property: Property) => void;
 }
@@ -19,6 +20,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   onResetFilters,
   totalResults,
   availableNeighborhoods = ['Алеи Възраждане', 'Божичен', 'Възраждане', 'Дружба', 'Здравец', 'Родина 1', 'Център', 'Червена Вода', 'Ялта'],
+  availableCities = ['Русе', 'София'],
   topProperties,
   onSelectProperty,
 }) => {
@@ -162,8 +164,11 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#2F54A3] focus:border-transparent transition-all cursor-pointer appearance-none"
                 >
                   <option value="all">Всички градове</option>
-                  <option value="Русе">гр. Русе</option>
-                  <option value="София">гр. София</option>
+                  {availableCities.map((c) => (
+                    <option key={c} value={c}>
+                      {c.startsWith('с.') ? c : `гр. ${c}`}
+                    </option>
+                  ))}
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                   ▼

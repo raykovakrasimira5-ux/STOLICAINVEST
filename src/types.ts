@@ -16,6 +16,7 @@ export const PROPERTY_TYPES = [
   'етаж от къща',
   'къща',
   'вила',
+  'Парцел',
   'ГАРАЖ',
   'ЗЕМЕДЕЛСКА ЗЕМЯ',
   'Бизнес имот',
@@ -40,33 +41,57 @@ export interface Agent {
 }
 
 export interface Property {
-  id: string;
-  refNumber: string;
+  id: string; // EstateID: stable synchronization key
+  estateId?: string; // Original EstateID
+  refNumber: string; // EstateRefCode
   title: string;
   dealType: DealType;
   category: PropertyCategory;
   categoryLabel: string;
   price: number;
   currency: 'EUR';
+  originalPrice?: number;
+  originalCurrency?: 'EUR' | 'BGN';
+  oldPrice?: number;
+  status?: 1 | 2 | 3; // 1 = active, 2 = offered/reserved, 3 = sold
+  statusLabel?: string; // 'Активна' | 'Резервиран' | 'Продаден'
   city: string;
   neighborhood: string;
   address?: string;
   lat?: number;
   lng?: number;
   area: number; // in square meters
+  builtArea?: number;
+  landArea?: number;
+  openedArea?: number;
+  rooms?: number;
   bedrooms: number;
   bathrooms: number;
   floor?: number;
   totalFloors?: number;
   yearBuilt?: number;
   constructionType?: string;
+  position?: string;
+  newBuildId?: string;
+  heatings?: string[];
+  heatingText?: string;
+  statute?: string;
+  kint?: number;
+  height?: number;
+  minPlanting?: number;
+  completeLevel?: string;
+  stage?: string;
   images: string[];
-  featured?: boolean;
+  featured?: boolean; // Top tag
+  exclusive?: boolean; // Exclusive tag
+  noCommission?: boolean; // Nocommission tag
   isNew?: boolean;
+  youtubeLink?: string;
   description: string;
   features: string[];
   agent: Agent;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface PropertyFilterState {

@@ -57,8 +57,11 @@ export const TopListingsCarousel: React.FC<TopListingsCarouselProps> = ({
             >
               {/* Only 1 large, crisp photo per slide */}
               <img
-                src={property.images[0]}
+                src={property.images?.[0] || '/assets/aistudio/hoise_8579d183.png'}
                 alt={property.title}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/assets/aistudio/hoise_8579d183.png';
+                }}
                 className="w-full h-full object-cover object-center transform scale-100 group-hover:scale-103 transition-transform duration-1000 ease-out"
               />
 
